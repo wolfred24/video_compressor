@@ -1,6 +1,3 @@
-Sure! Here is a `README.md` file explaining how to use the script:
-
-```markdown
 # Video Compressor Script
 
 This script compresses video files in a specified directory using `ffmpeg` with GPU acceleration. It supports various video formats and allows you to set a desired width and bitrate limit for the output videos.
@@ -82,6 +79,3 @@ compress.sh
 ## License
 
 This script is provided as-is without any warranty. Use it at your own risk.
-```
-
-This `README.md` file provides a detailed explanation of how to use the script, including prerequisites, usage instructions, script details, an example, and notes. Adjust the content as needed to fit your specific requirements.
