@@ -51,17 +51,16 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
             continue
         fi
 
-        echo "Procesando $INPUT_VIDEO"
+        
+
 
         # Obtiene el bitrate original utilizando ffmpeg
         ORIGINAL_BITRATE=$(ffmpeg -i "$INPUT_VIDEO" 2>&1 | grep -oP 'bitrate: \K[0-9]+')
-        echo "Bitrate original: $ORIGINAL_BITRATE kb/s"
-
+        
         # Obtiene la resolución original utilizando ffmpeg
         RESOLUTION=$(ffmpeg -i "$INPUT_VIDEO" 2>&1 | grep -oP 'Video:.* (\d{3,4})x(\d{3,4})' | head -n 1 | grep -oP '\d{3,4}x\d{3,4}')
         WIDTH=$(echo "$RESOLUTION" | cut -d'x' -f1)
         HEIGHT=$(echo "$RESOLUTION" | cut -d'x' -f2)
-        echo "Resolución original del video: ${WIDTH}x${HEIGHT}"
 
         # Verifica si el bitrate es menor a BITRATE_LIMIT
         if [ "$ORIGINAL_BITRATE" -lt "$BITRATE_LIMIT" ]; then
@@ -74,6 +73,10 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
             echo "El archivo $(basename "$INPUT_VIDEO") tiene un ancho menor a $DESIRED_WIDTH. Omitiendo conversión."
             continue
         fi
+
+        echo "Procesando: $INPUT_VIDEO"
+        echo "Bitrate original: $ORIGINAL_BITRATE kb/s"
+        echo "Resolución original del video: ${WIDTH}x${HEIGHT}"
 
         # Redimensiona si es necesario
         if [ -z "$DESIRED_WIDTH" ]; then
