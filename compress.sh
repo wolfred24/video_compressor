@@ -2,13 +2,15 @@
 
 # Directorio donde están los videos
 INPUT_DIR="$(pwd)"
-# VBR, CQP o CBR
+# 1920, 1280, 720, 640, 480, 360, 240
 DESIRED_WIDTH=""
+# VBR, CQP o CBR
 RC_MODE="-rc_mode VBR"
 BITRATE_LIMIT="15000"
 QUALITY="-crf 25"
 # VBR or CQP
 preset="-preset slow"
+APPEND="_compressed"
 
 # Verifica si el directorio contiene archivos
 if [ -z "$(ls -A $INPUT_DIR)" ]; then
@@ -33,6 +35,22 @@ fi
 # Recorre todos los archivos de video en el directorio
 for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
     if [ -f "$INPUT_VIDEO" ]; then
+
+        # Verifica si el archivo ya tiene el sufijo APPEND
+        if [[ "$INPUT_VIDEO" == *"$APPEND"* ]]; then
+            echo "El archivo $(basename "$INPUT_VIDEO") ya tiene el sufijo $APPEND. Omitiendo conversión."
+            continue
+        fi
+
+        # Define el archivo de salida
+        OUTPUT_VIDEO="${INPUT_VIDEO%.*}${APPEND}.${INPUT_VIDEO##*.}"
+
+        # Verifica si el archivo de salida ya existe
+        if [ -f "$OUTPUT_VIDEO" ]; then
+            echo "El archivo $(basename "$INPUT_VIDEO") ya fue convertido anteriormente ya que un archivo llamado $(basename "$OUTPUT_VIDEO") se encuentra en el mismo directorio. Omitiendo conversion."
+            continue
+        fi
+
         echo "Procesando $INPUT_VIDEO"
 
         # Obtiene el bitrate original utilizando ffmpeg
@@ -44,10 +62,6 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
         WIDTH=$(echo "$RESOLUTION" | cut -d'x' -f1)
         HEIGHT=$(echo "$RESOLUTION" | cut -d'x' -f2)
         echo "Resolución original del video: ${WIDTH}x${HEIGHT}"
-
-
-        # Define el archivo de salida
-        OUTPUT_VIDEO="${INPUT_VIDEO%.*}_compressed.${INPUT_VIDEO##*.}"
 
         # Redimensiona si es necesario
         if [ -z "$DESIRED_WIDTH" ]; then
