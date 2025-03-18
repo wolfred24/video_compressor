@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directorio donde están los videos
-INPUT_DIR="$(pwd)"
+INPUT_DIR="$(dirname "$(pwd)")"
 # 1920, 1280, 720, 640, 480, 360, 240
 DESIRED_WIDTH=""
 # VBR, CQP o CBR
@@ -62,6 +62,18 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
         WIDTH=$(echo "$RESOLUTION" | cut -d'x' -f1)
         HEIGHT=$(echo "$RESOLUTION" | cut -d'x' -f2)
         echo "Resolución original del video: ${WIDTH}x${HEIGHT}"
+
+        # Verifica si el bitrate es menor a BITRATE_LIMIT
+        if [ "$ORIGINAL_BITRATE" -lt "$BITRATE_LIMIT" ]; then
+            echo "El archivo $(basename "$INPUT_VIDEO") tiene un bitrate menor a $BITRATE_LIMIT kb/s. Omitiendo conversión."
+            continue
+        fi
+
+        # Verifica si el ancho es menor a DESIRED_WIDTH
+        if [ -n "$DESIRED_WIDTH" ] && [ "$WIDTH" -lt "$DESIRED_WIDTH" ]; then
+            echo "El archivo $(basename "$INPUT_VIDEO") tiene un ancho menor a $DESIRED_WIDTH. Omitiendo conversión."
+            continue
+        fi
 
         # Redimensiona si es necesario
         if [ -z "$DESIRED_WIDTH" ]; then
