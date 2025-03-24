@@ -1,12 +1,11 @@
 #!/bin/bash
 
 # Directorio donde están los videos
-INPUT_DIR="$(dirname "$(pwd)")"
+INPUT_DIR="d:\Videos\Honor Magic 6 Pro"
 # 1920, 1280, 720, 640, 480, 360, 240
 DESIRED_WIDTH=""
 # VBR, CQP o CBR
 RC_MODE="-rc_mode VBR"
-BITRATE_LIMIT="15000"
 QUALITY="-crf 25"
 # VBR or CQP
 preset="-preset slow"
@@ -62,11 +61,29 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
         WIDTH=$(echo "$RESOLUTION" | cut -d'x' -f1)
         HEIGHT=$(echo "$RESOLUTION" | cut -d'x' -f2)
 
+        # Determina el límite de bitrate según las reglas especificadas
+        BITRATE_CONVERSION=0
+
+        if [ "$ORIGINAL_BITRATE" -gt 20000 ]; then
+            BITRATE_CONVERSION=15000
+        elif [ "$ORIGINAL_BITRATE" -gt 15000 ]; then
+            BITRATE_CONVERSION=10000
+        elif [ "$ORIGINAL_BITRATE" -gt 12000 ]; then
+            BITRATE_CONVERSION=8000
+        elif [ "$ORIGINAL_BITRATE" -gt 8000 ]; then
+            BITRATE_CONVERSION=5000
+        fi
+
         # Verifica si el bitrate es menor a BITRATE_LIMIT
-        if [ "$ORIGINAL_BITRATE" -lt "$BITRATE_LIMIT" ]; then
-            echo "El archivo $(basename "$INPUT_VIDEO") tiene un bitrate menor a $BITRATE_LIMIT kb/s. Omitiendo conversión."
+        if [ "$BITRATE_CONVERSION" -eq 0 ]; then
+            echo "El archivo $(basename "$INPUT_VIDEO") tiene un bitrate menor a 8000 kb/s. Omitiendo conversión."
             continue
         fi
+
+         # Reduce el bitrate si es mayor a BITRATE_LIMIT kbps
+        echo "Reduciendo el bitrate a $BITRATE_CONVERSION kbps."
+        BITRATE_OPTION="-b:v ${BITRATE_CONVERSION}k"
+
 
         # Verifica si el ancho es menor a DESIRED_WIDTH
         if [ -n "$DESIRED_WIDTH" ] && [ "$WIDTH" -lt "$DESIRED_WIDTH" ]; then
@@ -87,19 +104,6 @@ for INPUT_VIDEO in "$INPUT_DIR"/*.{mp4,mkv,avi}; do
             SCALE_FILTER="-vf format=nv12,hwupload,scale_vaapi=w=$DESIRED_WIDTH:h=-2"
         else
             SCALE_FILTER=""
-        fi
-
-        # Reduce el bitrate si es mayor a BITRATE_LIMIT kbps
-        if [ -z "$BITRATE_LIMIT" ]; then
-            BITRATE_OPTION=""
-        elif [ "$ORIGINAL_BITRATE" -gt "$BITRATE_LIMIT" ]; then
-            echo "Reduciendo el bitrate a $BITRATE_LIMIT kbps."
-            # BITRATE_OPTION="-b:v ${BITRATE_LIMIT}k"
-            BITRATE_OPTION="-b:v ${BITRATE_LIMIT}k"
-        else
-            # BITRATE_OPTION="-b:v ${BITRATE}k"
-            BITRATE_OPTION="-b:v ${BITRATE_LIMIT}k"
-
         fi
 
         # Construye y ejecuta el comando ffmpeg
